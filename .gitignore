@@ -8,3 +8,11 @@ info/
 # Ignore Python cache
 __pycache__/
 *.pyc
+# Virtual Environments
+.venv/
+venv/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
