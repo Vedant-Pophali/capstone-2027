@@ -1,0 +1,10 @@
+# Ignore massive datasets
+CICIDS2017/
+CICIoV2024/
+Car hacking dataset/
+can_noniid_data/
+info/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
