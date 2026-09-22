@@ -91,7 +91,7 @@ class GatewaySecurityVerifier:
             "challenge_seed": envelope["challenge_seed"]
         }
 
-        expected_signature = CryptographicSigner.sign_payload(signing_content, expected_session_key)["signature"]
+        expected_signature = CryptographicSigner.generate_signature(signing_content, expected_session_key)
 
         if envelope["signature"] != expected_signature:
             msg = f"Security Violation: Signature mismatch! Payload tampered or unauthorized identity for vehicle {vehicle_id}."

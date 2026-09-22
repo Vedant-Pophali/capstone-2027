@@ -29,7 +29,7 @@ class SecurePayloadEnvelope:
         }
 
         # Calculate signature over the entire payload & metadata using PUF session key
-        signature = CryptographicSigner.sign_payload(signing_content, session_key)["signature"]
+        signature = CryptographicSigner.generate_signature(signing_content, session_key)
 
         # Build final secure envelope
         envelope = signing_content
