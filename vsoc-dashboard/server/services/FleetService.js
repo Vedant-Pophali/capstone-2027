@@ -26,9 +26,9 @@ class FleetService {
       throw new Error(`Vehicle ${vehicleId} already exists`);
     }
 
-    // Command to run a docker container. 
-    // Using a lightweight alpine image that just sleeps, acting as a dummy for the edge-vehicle
-    const cmd = `docker run -d --name vehicle_${vehicleId} -e VEHICLE_ID=${vehicleId} alpine sleep infinity`;
+    // Command to run a docker container using our actual Edge Vehicle Image
+    // We also attach it to the bridge network so it can communicate with the gateway/dashboard if needed
+    const cmd = `docker run -d --name vehicle_${vehicleId} -e VEHICLE_ID=${vehicleId} -e PAYLOAD_TYPE=THREAT_ALERT capstone-2027-edge_vehicle`;
     
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout, stderr) => {
