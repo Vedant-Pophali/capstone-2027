@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  audit-logger:
+    build:
+      context: ./audit-logger
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    
+  dashboard-server:
+    build:
+      context: ./vsoc-dashboard/server
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount Docker socket so the server can spin up edge-vehicle containers
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  dashboard-client:
+    build:
+      context: ./vsoc-dashboard/client
+    ports:
+      - "5173:80"
+    depends_on:
+      - dashboard-server
+    restart: unless-stopped
+
+  # The edge-vehicle is built here so the image is available locally.
+  # The dashboard-server will dynamically spin up instances of this image.
+  # Profiles can be used to prevent it from starting automatically if needed,
+  # but running one by default is good for testing.
+  edge-vehicle-base:
+    build:
+      context: ./edge-vehicles
+    environment:
+      - VEHICLE_ID=1
+    restart: unless-stopped
+    profiles: ["disabled"]

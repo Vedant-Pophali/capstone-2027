@@ -116,7 +116,7 @@ class TestSecureEdgeToCloudPipeline(unittest.TestCase):
             "payload": envelope["payload"],
             "challenge_seed": envelope["challenge_seed"]
         }
-        envelope["signature"] = CryptographicSigner.sign_payload(signing_content, self.session_key)["signature"]
+        envelope["signature"] = CryptographicSigner.generate_signature(signing_content, self.session_key)
 
         is_valid, msg = self.verifier.verify_envelope(envelope)
         self.assertFalse(is_valid)
