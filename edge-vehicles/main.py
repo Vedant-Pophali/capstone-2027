@@ -33,25 +33,41 @@ class VehicleNode:
         print(f"\n[*] Booting Edge Node for Vehicle ID: {self.vehicle_id}")
 
         try:
-            # 1. Begin PUF Handshake Sequence
+            # 1. Begin PUF Handshake Sequence (Two-Way)
             print("[*] Initiating Hardware PUF Handshake sequence...")
             self.state_machine.transition_to(HandshakeState.CHALLENGE_ISSUED)
             self.state_machine.check_state()
 
-            # 2. Compute Hardware Response
-            challenge, response = self.puf_module.get_response(self.challenge_seed)
+            # 1a. Send lightweight ping requesting to join
+            join_resp = self.adapter.request_join(self.vehicle_id)
+            if join_resp.get("status") != "authorized":
+                print(f"[!] Cloud gateway rejected the connection: {join_resp.get('reason')}")
+                return False
+                
+            cloud_challenge = join_resp.get("challenge")
+            print(f"[+] Received Challenge from Cloud: {cloud_challenge}")
+
+            # 2. Compute Hardware Response to the Cloud Challenge
+            _, response = self.puf_module.get_response(cloud_challenge)
             self.state_machine.transition_to(HandshakeState.RESPONSE_COMPUTED)
             self.state_machine.check_state()
 
             # 3. Derive Per-Round Session Key
             session_key = CryptographicSigner.derive_session_key(response)
             print(f"[+] Derived Hardware Session Key: {session_key[:12]}...")
+            
+            # 3a. Send lightweight proof (signed heartbeat)
+            proof_signature = CryptographicSigner.generate_signature({"heartbeat": cloud_challenge}, session_key)
+            if not self.adapter.send_proof(self.vehicle_id, cloud_challenge, proof_signature):
+                print("[!] Cloud gateway rejected the PUF proof. Unauthorized vehicle.")
+                return False
 
             self.state_machine.transition_to(HandshakeState.VERIFIED)
             current_state = self.state_machine.check_state()
             print(f"[+] Handshake Verified (State: {current_state.name}). Vehicle hardware authenticated.")
+            print("[*] Cloud issued secure command to begin heavy SNN training cycle.")
 
-            # 4. Construct Payload using Scalable Factory
+            # 4. Construct Payload using Scalable Factory (Simulates SNN ML payload computation)
             raw_payload = PayloadFactory.build(payload_type)
 
             # 5. Wrap into Secure Payload Envelope with Anti-Replay Nonce/Timestamp + HMAC Signature
@@ -59,7 +75,7 @@ class VehicleNode:
                 vehicle_id=self.vehicle_id,
                 payload_type=payload_type,
                 payload_data=raw_payload,
-                challenge_seed=self.challenge_seed,
+                challenge_seed=cloud_challenge,
                 session_key=session_key
             )
 

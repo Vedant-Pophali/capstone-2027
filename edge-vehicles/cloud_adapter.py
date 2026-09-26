@@ -27,6 +27,16 @@ class CloudAdapter(ABC):
         """
         pass
 
+    @abstractmethod
+    def request_join(self, vehicle_id: str) -> dict:
+        """Sends a lightweight ping requesting to join the session. Returns cloud response."""
+        pass
+
+    @abstractmethod
+    def send_proof(self, vehicle_id: str, challenge: int, signature: str) -> bool:
+        """Sends a signed proof of the challenge to the cloud. Returns True if verified."""
+        pass
+
 class MockCloudAdapter(CloudAdapter):
     """
     Mock Adapter for local testing and offline simulation.
@@ -37,6 +47,8 @@ class MockCloudAdapter(CloudAdapter):
         self.endpoint_url = endpoint_url
         self.connected = False
         self.sent_count = 0
+        from gateway_verifier import GatewaySecurityVerifier
+        self.verifier = GatewaySecurityVerifier()
 
     def connect(self) -> bool:
         self.connected = True
@@ -54,6 +66,18 @@ class MockCloudAdapter(CloudAdapter):
         logger.info(f"   Payload Type: {secure_envelope.get('payload_type')}")
         logger.info(f"   Signature: {secure_envelope.get('signature')[:16]}...")
         return True
+
+    def request_join(self, vehicle_id: str) -> dict:
+        if not self.connected:
+            self.connect()
+        logger.info(f"[MockCloudAdapter] Ping sent: Requesting join for Vehicle ID {vehicle_id}")
+        return self.verifier.request_join(vehicle_id)
+
+    def send_proof(self, vehicle_id: str, challenge: int, signature: str) -> bool:
+        if not self.connected:
+            self.connect()
+        logger.info(f"[MockCloudAdapter] Proof sent: Submitting signed challenge for Verification")
+        return self.verifier.verify_proof(vehicle_id, challenge, signature)
 
 class HTTPRestAdapter(CloudAdapter):
     """
@@ -97,6 +121,16 @@ class HTTPRestAdapter(CloudAdapter):
             logger.error(f"[HTTPRestAdapter] Unexpected error transmitting payload: {str(e)}")
             return False
 
+    def request_join(self, vehicle_id: str) -> dict:
+        # Mocking for HTTP Adapter since there's no real backend
+        logger.info(f"[HTTPRestAdapter] Mocking request join for {vehicle_id}")
+        import random
+        return {"status": "authorized", "challenge": random.randint(10000, 99999)}
+
+    def send_proof(self, vehicle_id: str, challenge: int, signature: str) -> bool:
+        logger.info(f"[HTTPRestAdapter] Mocking proof verification for {vehicle_id}")
+        return True
+
 class WebSocketAdapter(CloudAdapter):
     """
     WebSocket Adapter for real-time streaming transmission.
@@ -117,6 +151,13 @@ class WebSocketAdapter(CloudAdapter):
 
         logger.info(f"[WebSocketAdapter] Streaming secure envelope {secure_envelope.get('payload_id')} to {self.endpoint_url}")
         # In actual deployment, websocket library sends frame here.
+        return True
+
+    def request_join(self, vehicle_id: str) -> dict:
+        import random
+        return {"status": "authorized", "challenge": random.randint(10000, 99999)}
+
+    def send_proof(self, vehicle_id: str, challenge: int, signature: str) -> bool:
         return True
 
 class AdapterFactory:

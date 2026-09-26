@@ -26,6 +26,8 @@ class GatewaySecurityVerifier:
         self.seen_nonces = set()
         # Cache PUF instances per vehicle_id for speed in simulation
         self.puf_cache = {}
+        # Admin's authorized fleet database
+        self.authorized_fleet = {"42", "77", "99"}
 
     def get_vehicle_puf(self, vehicle_id: str) -> VehiclePUF:
         v_id = str(vehicle_id)
@@ -39,6 +41,28 @@ class GatewaySecurityVerifier:
             elif "VEHICLE_ID" in os.environ:
                 del os.environ["VEHICLE_ID"]
         return self.puf_cache[v_id]
+
+    def request_join(self, vehicle_id: str) -> dict:
+        import random
+        if str(vehicle_id) not in self.authorized_fleet:
+            return {"status": "rejected", "reason": "Unauthorized vehicle ID"}
+        
+        # Generate random Challenge
+        challenge = random.randint(10000, 99999)
+        return {"status": "authorized", "challenge": challenge}
+
+    def verify_proof(self, vehicle_id: str, challenge: int, signature: str) -> bool:
+        puf = self.get_vehicle_puf(vehicle_id)
+        _, response = puf.get_response(challenge)
+        expected_session_key = CryptographicSigner.derive_session_key(response)
+        
+        expected_signature = CryptographicSigner.generate_signature({"heartbeat": challenge}, expected_session_key)
+        
+        if signature == expected_signature:
+            logger.info(f"Green Light: Vehicle '{vehicle_id}' authenticated successfully.")
+            return True
+        logger.error(f"Security Violation: Invalid proof from vehicle '{vehicle_id}'.")
+        return False
 
     def verify_envelope(self, envelope: dict) -> tuple[bool, str]:
         # 1. Schema & Field Validation
