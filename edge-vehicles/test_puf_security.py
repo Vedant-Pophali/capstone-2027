@@ -1,8 +1,13 @@
 import unittest
+import os
+import sys
+
+# Ensure edge-vehicles directory is in Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from state_machine import RedundantStateMachine, HandshakeState
 from puf_simulator import VehiclePUF
 from crypto_signer import CryptographicSigner
-import numpy as np
 
 class TestPUFSecurityFramework(unittest.TestCase):
 
@@ -21,8 +26,6 @@ class TestPUFSecurityFramework(unittest.TestCase):
 
     def test_sybil_spoofed_vehicle_resistance(self):
         """Proves two cloned containers cannot generate the same PUF key."""
-        import os
-        
         # Vehicle 1 (Valid)
         os.environ["VEHICLE_ID"] = "101"  # Inject environment variable BEFORE instantiation
         car1 = VehiclePUF()
@@ -35,7 +38,8 @@ class TestPUFSecurityFramework(unittest.TestCase):
         _, resp2 = car2.get_response(999)
         key2 = CryptographicSigner.derive_session_key(resp2)
 
-        # The mathematical keys must differ, successfully blocking the cloned vehicle[cite: 1].
+        # The mathematical keys must differ, successfully blocking the cloned vehicle.
         self.assertNotEqual(key1, key2)
+
 if __name__ == '__main__':
     unittest.main()
