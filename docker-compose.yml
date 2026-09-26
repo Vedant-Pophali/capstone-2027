@@ -18,6 +18,18 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
+  fleet-manager:
+    build:
+      context: ./fleet-manager
+    ports:
+      - "8081:8080"
+    volumes:
+      # Mount Docker socket for Spring Boot to spin up containers dynamically
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persist the SQLite DB to the host
+      - ./data/fleet-manager:/app/data
+    restart: unless-stopped
+
   dashboard-client:
     build:
       context: ./vsoc-dashboard/client

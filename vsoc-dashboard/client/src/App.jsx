@@ -70,10 +70,10 @@ function App() {
     };
   }, []);
 
-  const handleAddVehicle = async (vehicleId) => {
+  const handleAddVehicle = async (vehicleData) => {
     try {
-      // The state update is now handled by the WebSocket event 'ADDED'
-      await apiService.addVehicle(vehicleId);
+      await apiService.addVehicle(vehicleData);
+      await fetchFleet();
     } catch (err) {
       alert(err.message);
     }
@@ -81,8 +81,8 @@ function App() {
 
   const handleRemoveVehicle = async (vehicleId) => {
     try {
-      // The state update is now handled by the WebSocket event 'REMOVED'
       await apiService.removeVehicle(vehicleId);
+      await fetchFleet();
     } catch (err) {
       alert(err.message);
     }

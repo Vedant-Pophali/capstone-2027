@@ -23,6 +23,18 @@ const VehicleCard = ({ vehicle, onRemove }) => {
       </div>
       
       <div className="card-body">
+        {vehicle.owner && (
+          <div className="info-row">
+            <span className="text-muted">Owner:</span>
+            <span className="value font-mono">{vehicle.owner}</span>
+          </div>
+        )}
+        {vehicle.model && (
+          <div className="info-row">
+            <span className="text-muted">Model:</span>
+            <span className="value font-mono">{vehicle.model}</span>
+          </div>
+        )}
         <div className="info-row">
           <Cpu size={16} className="text-muted" />
           <span className="text-muted">Container:</span>

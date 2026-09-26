@@ -4,12 +4,22 @@ import VehicleCard from './VehicleCard';
 
 const FleetDashboard = ({ fleet, loading, onAddVehicle, onRemoveVehicle }) => {
   const [newVehicleId, setNewVehicleId] = useState('');
+  const [owner, setOwner] = useState('');
+  const [model, setModel] = useState('');
   
   const handleAdd = (e) => {
     e.preventDefault();
     if (!newVehicleId.trim()) return;
-    onAddVehicle(newVehicleId.trim());
+    
+    onAddVehicle({ 
+      id: newVehicleId.trim(),
+      owner: owner.trim(),
+      model: model.trim()
+    });
+    
     setNewVehicleId('');
+    setOwner('');
+    setModel('');
   };
 
   const healthyCount = fleet.filter(v => v.status === 'Healthy').length;
@@ -45,12 +55,27 @@ const FleetDashboard = ({ fleet, loading, onAddVehicle, onRemoveVehicle }) => {
       {/* Fleet Controls */}
       <div className="fleet-controls">
         <h2>Active Fleet</h2>
-        <form onSubmit={handleAdd} className="add-vehicle-form">
+        <form onSubmit={handleAdd} className="add-vehicle-form" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <input 
             type="text" 
-            placeholder="Enter Vehicle ID (e.g. 42)" 
+            placeholder="Vehicle ID (e.g. 42)" 
             value={newVehicleId}
             onChange={(e) => setNewVehicleId(e.target.value)}
+            className="input-field"
+            required
+          />
+          <input 
+            type="text" 
+            placeholder="Admin Owner" 
+            value={owner}
+            onChange={(e) => setOwner(e.target.value)}
+            className="input-field"
+          />
+          <input 
+            type="text" 
+            placeholder="Vehicle Model" 
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
             className="input-field"
           />
           <button type="submit" className="btn-primary">
