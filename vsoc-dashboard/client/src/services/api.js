@@ -2,7 +2,7 @@
 // Components never call fetch() directly; they use this service.
 // Changing the backend URL or adding auth headers requires changes only here.
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8085/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8081/api';
 
 class ApiService {
 

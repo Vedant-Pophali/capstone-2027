@@ -3,7 +3,7 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { apiService } from '../services/api';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8085/ws';
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8081/ws';
 
 /**
  * Custom hook that manages fleet data fetching + STOMP WebSocket subscription.

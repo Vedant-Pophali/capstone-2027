@@ -57,7 +57,7 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
             value={form.id}
             onChange={handleChange}
             placeholder="e.g. 42"
-            pattern="^[a-zA-Z0-9_-]+$"
+            pattern="^[a-zA-Z0-9_\-]+$"
             required
             autoFocus
           />
