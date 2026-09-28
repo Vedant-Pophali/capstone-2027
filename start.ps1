@@ -22,7 +22,8 @@ Run everything via docker-compose (default).
 
 param(
     [switch]$Dev,
-    [switch]$TestOnly
+    [switch]$TestOnly,
+    [switch]$MLSimulation
 )
 
 $ErrorActionPreference = "Stop"
@@ -127,6 +128,31 @@ function Run-CrudTests {
     Write-Host "`n[TEST] Smoke tests completed." -ForegroundColor Cyan
 }
 
+# ── ML Simulation Mode ──────────────────────────────────────
+function Run-MLSimulation {
+    Write-Host "`n[ML SIMULATION] Activating local Python environment and running Edge Node Handshake Simulation..." -ForegroundColor Yellow
+    Write-Host "Pillar 1 Demo: Demonstrating Secure PUF Handshake for Vehicle ID: 77" -ForegroundColor Green
+
+    $pythonPath = "python"
+    if (Test-Path "$ProjectRoot\.venv\Scripts\python.exe") {
+        $pythonPath = "$ProjectRoot\.venv\Scripts\python.exe"
+        Write-Host "Using virtual environment Python..." -ForegroundColor DarkGray
+    } else {
+        Write-Host "No .venv found, using system Python..." -ForegroundColor DarkGray
+    }
+
+    & $pythonPath -m pip install -r "$ProjectRoot\edge-vehicles\requirements.txt" -q
+
+    $env:VEHICLE_ID = "77"
+    & $pythonPath "$ProjectRoot\edge-vehicles\main.py"
+
+    Write-Host "`n[ML SIMULATION] Running SNN Zero-Day Pipeline Simulation..." -ForegroundColor Yellow
+    Write-Host "Pillar 1 Demo (cont.): Demonstrating Local SNN/CNN retraining on zero-day attack." -ForegroundColor Green
+    & $pythonPath "$ProjectRoot\src\ml\orchestrator\zero_day_pipeline.py"
+    
+    Write-Host "`n[ML SIMULATION] Completed." -ForegroundColor Cyan
+}
+
 # ── Docker Mode ─────────────────────────────────────────────
 function Start-DockerMode {
     Write-Host "[1/4] Pre-flight checks..." -ForegroundColor Yellow
@@ -220,6 +246,8 @@ Write-Banner
 
 if ($TestOnly) {
     Run-CrudTests
+} elseif ($MLSimulation) {
+    Run-MLSimulation
 } elseif ($Dev) {
     Start-DevMode
 } else {
