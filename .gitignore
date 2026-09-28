@@ -1,24 +1,38 @@
-# Ignore massive datasets
-CICIDS2017/
-CICIoV2024/
-Car hacking dataset/
-can_noniid_data/
-info/
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
 
-# Ignore Python cache
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+# Python
 __pycache__/
-*.pyc
-# Virtual Environments
+*.py[cod]
+*$py.class
 .venv/
 venv/
-
-# Python Cache
-__pycache__/
-*.pyc
-*.pyo
-PUF_CP_IDS_Dataset_Documentation.docx
-
-# Node
-node_modules/
-dist/
+env/
 .env
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Other logs & DB
+*.sqlite
+*.db
+fleet-manager.log

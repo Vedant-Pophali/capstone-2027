@@ -1,53 +1,76 @@
-// Flexible API service layer decoupled from the components
-// Follows SOLID principles: components shouldn't care how the data is fetched.
-const API_BASE_URL = 'http://localhost:3001/api';
+// API service layer — decoupled from React.
+// Components never call fetch() directly; they use this service.
+// Changing the backend URL or adding auth headers requires changes only here.
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8085/api';
 
 class ApiService {
-  async fetchFleet() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/fleet`);
-      if (!response.ok) throw new Error('Network response was not ok');
-      const json = await response.json();
-      return json.data;
-    } catch (error) {
-      console.error('Error fetching fleet:', error);
-      throw error;
+
+  async request(endpoint, options = {}) {
+    const url = `${API_BASE}${endpoint}`;
+    const config = {
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      ...options,
+    };
+
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      let errorMessage = `Request failed: ${response.status}`;
+      try {
+        const errorBody = await response.json();
+        errorMessage = errorBody.message || errorMessage;
+      } catch { /* response wasn't JSON */ }
+      throw new Error(errorMessage);
     }
+
+    // 204 No Content — no body to parse
+    if (response.status === 204) return null;
+
+    return response.json();
   }
 
-  async addVehicle(vehicleId) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/fleet/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ vehicleId })
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add vehicle');
-      }
-      const json = await response.json();
-      return json.data;
-    } catch (error) {
-      console.error('Error adding vehicle:', error);
-      throw error;
-    }
+  // --- Vehicle CRUD ---
+
+  fetchVehicles() {
+    return this.request('/vehicles');
   }
 
-  async removeVehicle(vehicleId) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/fleet/${vehicleId}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to remove vehicle');
-      const json = await response.json();
-      return json.data;
-    } catch (error) {
-      console.error('Error removing vehicle:', error);
-      throw error;
-    }
+  fetchVehicle(id) {
+    return this.request(`/vehicles/${id}`);
+  }
+
+  createVehicle(data) {
+    return this.request('/vehicles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  updateVehicle(id, data) {
+    return this.request(`/vehicles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  deleteVehicle(id) {
+    return this.request(`/vehicles/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  updateVehicleStatus(id, status) {
+    return this.request(`/vehicles/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  // --- Dashboard ---
+
+  fetchDashboardStats() {
+    return this.request('/dashboard/stats');
   }
 }
 
