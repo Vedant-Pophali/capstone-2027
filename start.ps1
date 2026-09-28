@@ -31,10 +31,10 @@ $ProjectRoot = $PSScriptRoot
 
 function Write-Banner {
     Write-Host ""
-    Write-Host "  ╔═══════════════════════════════════════════════╗" -ForegroundColor DarkCyan
-    Write-Host "  ║   Capstone 2027: VSOC Fleet Manager          ║" -ForegroundColor DarkCyan
-    Write-Host "  ║   Secure Edge-to-Cloud Vehicle Management    ║" -ForegroundColor DarkCyan
-    Write-Host "  ╚═══════════════════════════════════════════════╝" -ForegroundColor DarkCyan
+    Write-Host "  =================================================" -ForegroundColor DarkCyan
+    Write-Host "  |   Capstone 2027: VSOC Fleet Manager           |" -ForegroundColor DarkCyan
+    Write-Host "  |   Secure Edge-to-Cloud Vehicle Management     |" -ForegroundColor DarkCyan
+    Write-Host "  =================================================" -ForegroundColor DarkCyan
     Write-Host ""
 }
 
