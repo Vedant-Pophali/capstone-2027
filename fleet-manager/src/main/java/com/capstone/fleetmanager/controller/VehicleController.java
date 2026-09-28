@@ -1,50 +1,67 @@
 package com.capstone.fleetmanager.controller;
 
-import com.capstone.fleetmanager.model.Vehicle;
+import com.capstone.fleetmanager.dto.VehicleRequest;
+import com.capstone.fleetmanager.dto.VehicleResponse;
 import com.capstone.fleetmanager.service.VehicleService;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
+/**
+ * REST controller for vehicle CRUD operations.
+ * Thin layer — delegates all business logic to VehicleService.
+ * Error handling is in GlobalExceptionHandler, not here.
+ */
 @RestController
 @RequestMapping("/api/vehicles")
-@CrossOrigin(origins = "*")
 public class VehicleController {
 
-    @Autowired
-    private VehicleService vehicleService;
+    private final VehicleService vehicleService;
+
+    public VehicleController(VehicleService vehicleService) {
+        this.vehicleService = vehicleService;
+    }
 
     @GetMapping
-    public ResponseEntity<List<Vehicle>> getAll() {
+    public ResponseEntity<List<VehicleResponse>> getAll() {
         return ResponseEntity.ok(vehicleService.getAllVehicles());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Vehicle> getById(@PathVariable String id) {
-        return vehicleService.getVehicle(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<VehicleResponse> getById(@PathVariable String id) {
+        return ResponseEntity.ok(vehicleService.getVehicle(id));
     }
 
     @PostMapping
-    public ResponseEntity<?> addVehicle(@RequestBody Vehicle vehicleRequest) {
-        try {
-            Vehicle newVehicle = vehicleService.addVehicle(vehicleRequest);
-            return ResponseEntity.ok(newVehicle);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<VehicleResponse> create(@Valid @RequestBody VehicleRequest request) {
+        VehicleResponse created = vehicleService.createVehicle(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<VehicleResponse> update(@PathVariable String id,
+                                                   @RequestBody VehicleRequest request) {
+        return ResponseEntity.ok(vehicleService.updateVehicle(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> removeVehicle(@PathVariable String id) {
-        try {
-            vehicleService.removeVehicle(id);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        vehicleService.deleteVehicle(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<VehicleResponse> updateStatus(@PathVariable String id,
+                                                         @RequestBody Map<String, String> body) {
+        String newStatus = body.get("status");
+        if (newStatus == null || newStatus.isBlank()) {
+            throw new IllegalArgumentException("Status field is required");
         }
+        return ResponseEntity.ok(vehicleService.updateStatus(id, newStatus));
     }
 }

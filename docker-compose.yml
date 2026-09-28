@@ -1,30 +1,13 @@
 version: '3.8'
 
 services:
-  audit-logger:
-    build:
-      context: ./audit-logger
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-    
-  dashboard-server:
-    build:
-      context: ./vsoc-dashboard/server
-    ports:
-      - "3001:3001"
-    volumes:
-      # Mount Docker socket so the server can spin up edge-vehicle containers
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
-
   fleet-manager:
     build:
       context: ./fleet-manager
     ports:
-      - "8081:8080"
+      - "8081:8081"
     volumes:
-      # Mount Docker socket for Spring Boot to spin up containers dynamically
+      # Mount Docker socket so Spring Boot can spin up containers dynamically
       - /var/run/docker.sock:/var/run/docker.sock
       # Persist the SQLite DB to the host
       - ./data/fleet-manager:/app/data
@@ -36,13 +19,11 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - dashboard-server
+      - fleet-manager
     restart: unless-stopped
 
   # The edge-vehicle is built here so the image is available locally.
-  # The dashboard-server will dynamically spin up instances of this image.
-  # Profiles can be used to prevent it from starting automatically if needed,
-  # but running one by default is good for testing.
+  # The fleet-manager dynamically spins up instances of this image via Docker CLI.
   edge-vehicle-base:
     build:
       context: ./edge-vehicles
