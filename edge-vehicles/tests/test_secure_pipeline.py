@@ -4,14 +4,14 @@ import sys
 import datetime
 
 # Ensure edge-vehicles directory is in Python path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from cloud_adapter import AdapterFactory, MockCloudAdapter, HTTPRestAdapter, WebSocketAdapter
-from secure_envelope import SecurePayloadEnvelope
-from gateway_verifier import GatewaySecurityVerifier
-from puf_simulator import VehiclePUF
-from crypto_signer import CryptographicSigner
-from state_machine import RedundantStateMachine, HandshakeState
+from src.network.cloud_adapter import AdapterFactory, MockCloudAdapter, HTTPRestAdapter, WebSocketAdapter
+from src.security.secure_envelope import SecurePayloadEnvelope
+from src.network.gateway_verifier import GatewaySecurityVerifier
+from src.security.puf_simulator import VehiclePUF
+from src.security.crypto_signer import CryptographicSigner
+from src.core.state_machine import RedundantStateMachine, HandshakeState
 
 class TestSecureEdgeToCloudPipeline(unittest.TestCase):
 

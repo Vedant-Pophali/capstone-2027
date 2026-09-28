@@ -1,7 +1,7 @@
 import uuid
 import datetime
 import secrets
-from crypto_signer import CryptographicSigner
+from src.security.crypto_signer import CryptographicSigner
 
 class SecurePayloadEnvelope:
     VERSION = "1.0"

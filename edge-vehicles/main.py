@@ -1,11 +1,11 @@
 import os
 import sys
-from puf_simulator import VehiclePUF
-from state_machine import RedundantStateMachine, HandshakeState
-from crypto_signer import CryptographicSigner
-from secure_envelope import SecurePayloadEnvelope
-from cloud_adapter import AdapterFactory
-from payload_factory import PayloadFactory
+from src.security.puf_simulator import VehiclePUF
+from src.core.state_machine import RedundantStateMachine, HandshakeState
+from src.security.crypto_signer import CryptographicSigner
+from src.security.secure_envelope import SecurePayloadEnvelope
+from src.network.cloud_adapter import AdapterFactory
+from src.network.payload_factory import PayloadFactory
 
 class VehicleNode:
     """

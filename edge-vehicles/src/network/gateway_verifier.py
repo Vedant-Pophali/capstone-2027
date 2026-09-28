@@ -5,8 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from puf_simulator import VehiclePUF
-from crypto_signer import CryptographicSigner
+from src.security.puf_simulator import VehiclePUF
+from src.security.crypto_signer import CryptographicSigner
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GatewayVerifier")

@@ -3,11 +3,11 @@ import os
 import sys
 
 # Ensure edge-vehicles directory is in Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from state_machine import RedundantStateMachine, HandshakeState
-from puf_simulator import VehiclePUF
-from crypto_signer import CryptographicSigner
+from src.core.state_machine import RedundantStateMachine, HandshakeState
+from src.security.puf_simulator import VehiclePUF
+from src.security.crypto_signer import CryptographicSigner
 
 class TestPUFSecurityFramework(unittest.TestCase):
 
