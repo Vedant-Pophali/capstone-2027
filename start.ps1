@@ -46,7 +46,7 @@ function Test-Prerequisites {
             Write-Host "[ERROR] Docker is not installed or not in PATH." -ForegroundColor Red
             exit 1
         }
-        $dockerRunning = docker info 2>&1
+        docker info 2>&1 | Out-Null
         if ($LASTEXITCODE -ne 0) {
             Write-Host "[ERROR] Docker daemon is not running. Please start Docker Desktop." -ForegroundColor Red
             exit 1
@@ -78,7 +78,7 @@ function Test-Prerequisites {
 }
 
 # ── CRUD Test Mode ──────────────────────────────────────────
-function Run-CrudTests {
+function Invoke-CrudTests {
     Write-Host "`n[TEST] Running CRUD smoke tests against http://localhost:8081" -ForegroundColor Yellow
 
     $baseUrl = "http://localhost:8081/api"
@@ -129,7 +129,7 @@ function Run-CrudTests {
 }
 
 # ── ML Simulation Mode ──────────────────────────────────────
-function Run-MLSimulation {
+function Invoke-MLSimulation {
     Write-Host "`n[ML SIMULATION] Activating local Python environment and running Edge Node Handshake Simulation..." -ForegroundColor Yellow
     Write-Host "Pillar 1 Demo: Demonstrating Secure PUF Handshake for Vehicle ID: 77" -ForegroundColor Green
 
@@ -245,9 +245,9 @@ function Start-DevMode {
 Write-Banner
 
 if ($TestOnly) {
-    Run-CrudTests
+    Invoke-CrudTests
 } elseif ($MLSimulation) {
-    Run-MLSimulation
+    Invoke-MLSimulation
 } elseif ($Dev) {
     Start-DevMode
 } else {

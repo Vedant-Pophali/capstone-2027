@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  * never on concrete Docker/WebSocket implementations.
  */
 @Service
+@SuppressWarnings("null")
 public class VehicleService {
 
     private static final Logger log = LoggerFactory.getLogger(VehicleService.class);
