@@ -5,7 +5,7 @@ services:
     build:
       context: ./fleet-manager
     ports:
-      - "8081:8081"
+      - "8081:8085"
     volumes:
       # Mount Docker socket so Spring Boot can spin up containers dynamically
       - /var/run/docker.sock:/var/run/docker.sock
