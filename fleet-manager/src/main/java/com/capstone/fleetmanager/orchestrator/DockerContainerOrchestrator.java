@@ -28,6 +28,23 @@ public class DockerContainerOrchestrator implements ContainerOrchestrator {
 
         log.info("Spinning up container '{}' from image '{}'", containerName, IMAGE_NAME);
 
+        // Remove any pre-existing container with the same name (e.g. from a previous run).
+        // This makes vehicle registration idempotent across restarts.
+        try {
+            ProcessBuilder rmPb = new ProcessBuilder("docker", "rm", "-f", containerName);
+            rmPb.redirectErrorStream(true);
+            Process rmProcess = rmPb.start();
+            // Drain stdout so the process doesn't block
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(rmProcess.getInputStream()))) {
+                while (reader.readLine() != null) { /* drain */ }
+            }
+            rmProcess.waitFor(10, TimeUnit.SECONDS);
+            // We intentionally ignore the exit code — if the container didn't exist, docker rm -f exits non-zero, which is fine.
+            log.debug("Pre-existing container '{}' removed (if it existed)", containerName);
+        } catch (Exception e) {
+            log.warn("Could not pre-remove container '{}': {}", containerName, e.getMessage());
+        }
+
         ProcessBuilder pb = new ProcessBuilder(
             "docker", "run", "-d",
             "--name", containerName,

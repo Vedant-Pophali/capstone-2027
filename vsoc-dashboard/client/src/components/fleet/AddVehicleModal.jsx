@@ -3,10 +3,14 @@ import Modal from '../ui/Modal';
 import { useToast } from '../../context/ToastContext';
 import { apiService } from '../../services/api';
 
-const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
+const AddVehicleModal = ({ isOpen, onClose, onSuccess, existingVehicles = [] }) => {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ id: '', owner: '', model: '' });
+
+  // Client-side duplicate check for instant feedback
+  const isDuplicate = form.id.trim() !== '' &&
+    existingVehicles.some(v => v.id === form.id.trim());
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -14,7 +18,7 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.id.trim()) return;
+    if (!form.id.trim() || isDuplicate) return;
 
     setLoading(true);
     try {
@@ -39,7 +43,7 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
       <button className="btn btn-secondary" onClick={onClose} disabled={loading}>
         Cancel
       </button>
-      <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || !form.id.trim()}>
+      <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || !form.id.trim() || isDuplicate}>
         {loading ? 'Creating...' : 'Create Vehicle'}
       </button>
     </>
@@ -52,7 +56,7 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
           <label className="form-label" htmlFor="vehicle-id">Vehicle ID *</label>
           <input
             id="vehicle-id"
-            className="form-input"
+            className={`form-input${isDuplicate ? ' input-error' : ''}`}
             name="id"
             value={form.id}
             onChange={handleChange}
@@ -61,7 +65,13 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
             required
             autoFocus
           />
-          <div className="form-hint">Alphanumeric characters, hyphens, and underscores only.</div>
+          {isDuplicate ? (
+            <div className="form-hint" style={{ color: 'var(--color-error, #f87171)' }}>
+              ⚠ Vehicle ID already exists in the fleet.
+            </div>
+          ) : (
+            <div className="form-hint">Alphanumeric characters, hyphens, and underscores only.</div>
+          )}
         </div>
 
         <div className="form-group">

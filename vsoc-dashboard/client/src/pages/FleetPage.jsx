@@ -21,6 +21,7 @@ const FleetPage = ({ vehicles, loading, onRefresh }) => {
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onSuccess={onRefresh}
+          existingVehicles={vehicles}
         />
       </div>
     </>

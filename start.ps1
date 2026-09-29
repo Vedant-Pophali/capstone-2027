@@ -159,11 +159,24 @@ function Start-DockerMode {
     Test-Prerequisites -NeedDocker $true
 
     Write-Host "`n[2/4] Tearing down previous containers..." -ForegroundColor Yellow
-    docker-compose -f "$ProjectRoot\docker-compose.yml" down 2>$null
+    # Override ErrorActionPreference locally — docker-compose writes progress to stderr,
+    # which PS5 treats as a NativeCommandError when ErrorActionPreference=Stop.
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    & docker-compose -f "$ProjectRoot\docker-compose.yml" down 2>&1 | Out-Null
+    $ErrorActionPreference = $prev
 
     Write-Host "`n[3/4] Building and launching all services..." -ForegroundColor Yellow
     Write-Host "  This builds: fleet-manager (Spring Boot), dashboard-client (Vite/React), edge-vehicle-base" -ForegroundColor DarkGray
-    docker-compose -f "$ProjectRoot\docker-compose.yml" up -d --build
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    & docker-compose -f "$ProjectRoot\docker-compose.yml" up -d --build
+    $buildExit = $LASTEXITCODE
+    $ErrorActionPreference = $prev
+    if ($buildExit -ne 0) {
+        Write-Host "[ERROR] docker-compose up failed (exit $buildExit). Check Docker logs." -ForegroundColor Red
+        exit 1
+    }
 
     Write-Host "`n[4/4] Waiting for services to initialize (15 seconds)..." -ForegroundColor Yellow
     Start-Sleep -Seconds 15
@@ -180,7 +193,10 @@ function Start-DockerMode {
         while ($true) { Start-Sleep -Seconds 1 }
     } finally {
         Write-Host "`n  Shutting down..." -ForegroundColor Yellow
-        docker-compose -f "$ProjectRoot\docker-compose.yml" down
+        $prev = $ErrorActionPreference
+        $ErrorActionPreference = 'SilentlyContinue'
+        & docker-compose -f "$ProjectRoot\docker-compose.yml" down 2>&1 | Out-Null
+        $ErrorActionPreference = $prev
         Write-Host "  Done!" -ForegroundColor Green
     }
 }
