@@ -36,3 +36,11 @@ Thumbs.db
 *.sqlite
 *.db
 fleet-manager.log
+
+# Datasets
+CICIDS2017/
+CICIoV2024/
+Car hacking dataset/
+info/
+can_noniid_data
+PUF_CP_IDS_Dataset_Documentation.docx

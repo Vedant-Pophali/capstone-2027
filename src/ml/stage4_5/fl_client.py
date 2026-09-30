@@ -58,6 +58,14 @@ class PUFClient(fl.client.NumPyClient):
             loop.set_postfix(Loss=f"{loss.item():.4f}")
             
         print(f"Local training complete. Avg Loss: {total_loss/len(self.trainloader):.4f}")
+        
+        # Save the local update to disk for the Go backend to pick up
+        models_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models')
+        os.makedirs(models_dir, exist_ok=True)
+        save_path = os.path.join(models_dir, 'local_update.pth')
+        torch.save(self.model.state_dict(), save_path)
+        print(f"Local weights saved to: {save_path}")
+        
         return self.get_parameters(config={}), len(self.trainloader.dataset), {}
 
 def main():
