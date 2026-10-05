@@ -1,3 +1,5 @@
 pypuf
 numpy
 torch
+cryptography
+matplotlib
