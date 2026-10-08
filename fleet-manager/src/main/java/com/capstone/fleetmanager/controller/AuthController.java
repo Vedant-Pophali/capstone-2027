@@ -32,7 +32,7 @@ public class AuthController {
      * POST /api/auth/register
      * {
      *   "username": "alice",
-     *   "password": "Secret1!",
+     *   "password": "<your-password>",
      *   "role": "OPERATOR"
      * }
      * </pre>
@@ -52,7 +52,7 @@ public class AuthController {
      * POST /api/auth/login
      * {
      *   "username": "alice",
-     *   "password": "Secret1!"
+     *   "password": "<your-password>"
      * }
      * </pre>
      *

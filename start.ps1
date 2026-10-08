@@ -158,12 +158,25 @@ function Start-DockerMode {
     Write-Host "[1/4] Pre-flight checks..." -ForegroundColor Yellow
     Test-Prerequisites -NeedDocker $true
 
+    # Load .env so JWT_SECRET / DEFAULT_ADMIN_PASSWORD are available to docker compose
+    $envFile = "$ProjectRoot\.env"
+    if (-not (Test-Path $envFile)) {
+        Write-Host "[ERROR] .env file not found. Copy .env.example to .env and fill in secret values." -ForegroundColor Red
+        Write-Host "        cp .env.example .env  # then edit with real credentials" -ForegroundColor DarkGray
+        exit 1
+    }
+    Get-Content $envFile | Where-Object { $_ -notmatch '^\s*#' -and $_ -match '=' } | ForEach-Object {
+        $parts = $_ -split '=', 2
+        [System.Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim(), 'Process')
+    }
+    Write-Host "  [OK] .env loaded" -ForegroundColor Green
+
     Write-Host "`n[2/4] Tearing down previous containers..." -ForegroundColor Yellow
-    docker-compose -f "$ProjectRoot\docker-compose.yml" down 2>$null
+    docker compose -f "$ProjectRoot\docker-compose.yml" down 2>$null
 
     Write-Host "`n[3/4] Building and launching all services..." -ForegroundColor Yellow
     Write-Host "  This builds: fleet-manager (Spring Boot), dashboard-client (Vite/React), edge-vehicle-base" -ForegroundColor DarkGray
-    docker-compose -f "$ProjectRoot\docker-compose.yml" up -d --build
+    docker compose -f "$ProjectRoot\docker-compose.yml" up -d --build
 
     Write-Host "`n[4/4] Waiting for services to initialize (15 seconds)..." -ForegroundColor Yellow
     Start-Sleep -Seconds 15
@@ -180,7 +193,7 @@ function Start-DockerMode {
         while ($true) { Start-Sleep -Seconds 1 }
     } finally {
         Write-Host "`n  Shutting down..." -ForegroundColor Yellow
-        docker-compose -f "$ProjectRoot\docker-compose.yml" down
+        docker compose -f "$ProjectRoot\docker-compose.yml" down
         Write-Host "  Done!" -ForegroundColor Green
     }
 }

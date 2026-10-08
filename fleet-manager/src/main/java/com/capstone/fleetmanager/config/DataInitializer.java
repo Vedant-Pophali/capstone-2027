@@ -24,7 +24,7 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.default-user.username:admin}")
     private String defaultUsername;
 
-    @Value("${app.default-user.password:Passout@2027}")
+    @Value("${app.default-user.password}")
     private String defaultPassword;
 
     @Value("${app.default-user.role:ADMIN}")
