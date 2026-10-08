@@ -45,7 +45,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 // Disable CSRF — not needed for stateless REST APIs
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.disable())
 
                 // Stateless session — no HttpSession, no cookies
                 .sessionManagement(sm ->
