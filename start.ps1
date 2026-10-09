@@ -171,12 +171,22 @@ function Start-DockerMode {
     }
     Write-Host "  [OK] .env loaded" -ForegroundColor Green
 
+    $oldEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+
     Write-Host "`n[2/4] Tearing down previous containers..." -ForegroundColor Yellow
-    docker compose -f "$ProjectRoot\docker-compose.yml" down 2>$null
+    docker compose -f "$ProjectRoot\docker-compose.yml" down 2>&1 | Out-Null
 
     Write-Host "`n[3/4] Building and launching all services..." -ForegroundColor Yellow
     Write-Host "  This builds: fleet-manager (Spring Boot), dashboard-client (Vite/React), edge-vehicle-base" -ForegroundColor DarkGray
+
+    # Pre-build the edge-vehicle-base image so the orchestrator can spin up containers immediately
+    Write-Host "  Pre-building edge-vehicle-base image..." -ForegroundColor DarkGray
+    docker compose -f "$ProjectRoot\docker-compose.yml" build --no-deps edge-vehicle-base 2>&1 | Out-Null
+
     docker compose -f "$ProjectRoot\docker-compose.yml" up -d --build
+
+    $ErrorActionPreference = $oldEap
 
     Write-Host "`n[4/4] Waiting for services to initialize (15 seconds)..." -ForegroundColor Yellow
     Start-Sleep -Seconds 15
@@ -214,6 +224,9 @@ function Start-DevMode {
         param($root)
         Set-Location "$root\fleet-manager"
         $env:SPRING_DATASOURCE_URL = "jdbc:sqlite:$root/data/fleet-manager/fleet.db"
+        # In dev mode: use the image built directly (not via compose), and no compose network
+        $env:ORCHESTRATOR_IMAGE_NAME = "capstone-2027-edge-vehicle-base"
+        $env:ORCHESTRATOR_NETWORK_NAME = ""
         mvn spring-boot:run -q
     } -ArgumentList $ProjectRoot
 

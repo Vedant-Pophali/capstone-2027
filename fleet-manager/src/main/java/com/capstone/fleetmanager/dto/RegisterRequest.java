@@ -12,6 +12,8 @@ import jakarta.validation.constraints.Size;
  *   - At least one uppercase letter (A-Z)
  *   - At least one digit (0-9)
  *   - At least one special character (!@#$%^&*...)
+ *
+ * Only one role exists: ADMIN.
  */
 public record RegisterRequest(
 
@@ -36,11 +38,9 @@ public record RegisterRequest(
         String password,
 
         /**
-         * Role to assign. Accepted values: ADMIN, OPERATOR, VIEWER.
-         * In a real production system, ADMIN assignment would require a privileged caller —
-         * for this capstone we keep it simple and allow it on registration.
+         * Role to assign. Only ADMIN is accepted.
          */
         @NotBlank(message = "Role is required")
-        @Pattern(regexp = "ADMIN|OPERATOR|VIEWER", message = "Role must be one of: ADMIN, OPERATOR, VIEWER")
+        @Pattern(regexp = "ADMIN", message = "Only the ADMIN role is supported")
         String role
 ) {}

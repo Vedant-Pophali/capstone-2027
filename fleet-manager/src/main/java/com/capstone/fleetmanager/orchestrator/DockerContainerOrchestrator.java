@@ -3,39 +3,64 @@ package com.capstone.fleetmanager.orchestrator;
 import com.capstone.fleetmanager.exception.ContainerOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Docker-based implementation of the ContainerOrchestrator strategy.
  * Uses ProcessBuilder (not Runtime.exec) for safer subprocess management.
  * Sanitization happens at the DTO validation layer — IDs are guaranteed alphanumeric.
+ *
+ * Configuration (via environment variables or application.properties):
+ *   ORCHESTRATOR_IMAGE_NAME   — Docker image to spin up per vehicle (default: capstone-2027-edge-vehicle-base)
+ *   ORCHESTRATOR_NETWORK_NAME — Docker network to attach containers to (default: capstone-2027_default, leave blank for none)
  */
 @Component
 public class DockerContainerOrchestrator implements ContainerOrchestrator {
 
     private static final Logger log = LoggerFactory.getLogger(DockerContainerOrchestrator.class);
     private static final long TIMEOUT_SECONDS = 60;
-    private static final String IMAGE_NAME = "capstone-2027-edge-vehicle-base";
-    private static final String NETWORK_NAME = "capstone-2027_default";
+
+    private final String imageName;
+    private final String networkName;
+
+    public DockerContainerOrchestrator(
+            @Value("${orchestrator.image-name:capstone-2027-edge-vehicle-base}") String imageName,
+            @Value("${orchestrator.network-name:capstone-2027_default}") String networkName) {
+        this.imageName   = imageName;
+        this.networkName = networkName;
+    }
 
     @Override
     public String spinUp(String vehicleId) throws Exception {
         String containerName = "vehicle_" + vehicleId;
 
-        log.info("Spinning up container '{}' from image '{}'", containerName, IMAGE_NAME);
+        log.info("Spinning up container '{}' from image '{}'", containerName, imageName);
 
-        ProcessBuilder pb = new ProcessBuilder(
+        List<String> cmd = new ArrayList<>(List.of(
             "docker", "run", "-d",
-            "--name", containerName,
-            "--network", NETWORK_NAME,
+            "--name", containerName
+        ));
+
+        // Only attach to a named network if one is configured
+        if (networkName != null && !networkName.isBlank()) {
+            cmd.add("--network");
+            cmd.add(networkName);
+        }
+
+        cmd.addAll(List.of(
             "-e", "VEHICLE_ID=" + vehicleId,
             "-e", "PAYLOAD_TYPE=THREAT_ALERT",
-            IMAGE_NAME
-        );
+            imageName
+        ));
+
+        ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.redirectErrorStream(false);
 
         Process process = pb.start();

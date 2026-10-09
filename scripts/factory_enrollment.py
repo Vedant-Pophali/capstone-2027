@@ -53,7 +53,8 @@ def enroll_vehicle(vehicle_id: str, count: int, endpoint: str) -> int:
 
     # Set VEHICLE_ID so the VehiclePUF seeds itself correctly
     os.environ["VEHICLE_ID"] = str(vehicle_id)
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    # Go up one level from scripts/ to the project root so edge_vehicles can be imported
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     from edge_vehicles.src.security.puf_simulator import VehiclePUF
     puf = VehiclePUF()

@@ -15,10 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * Spring Security configuration — stateless JWT-based auth.
  *
- * Role hierarchy:
- *   ADMIN    – all operations, including user management endpoints (future)
- *   OPERATOR – vehicle CRUD (POST / PUT / PATCH / DELETE on /api/vehicles/**)
- *   VIEWER   – read-only GET requests
+ * Single role: ADMIN — all operations require this role.
  *
  * Public endpoints (no token required):
  *   POST /api/auth/login
@@ -44,6 +41,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
+                // Enable CORS so preflight OPTIONS requests are allowed
+                .cors(org.springframework.security.config.Customizer.withDefaults())
+
                 // Disable CSRF — not needed for stateless REST APIs
                 .csrf(csrf -> csrf.disable())
 
@@ -60,23 +60,11 @@ public class SecurityConfig {
                         // --- Dashboard: read-only, public ---
                         .requestMatchers(HttpMethod.GET, "/api/dashboard/**").permitAll()
 
-                        // --- PUF auth endpoints: any authenticated user ---
-                        .requestMatchers("/api/puf/**").authenticated()
+                        // --- WebSockets ---
+                        .requestMatchers("/ws/**").permitAll()
 
-                        // --- Vehicles: read = VIEWER+, write = OPERATOR+ ---
-                        .requestMatchers(HttpMethod.GET, "/api/vehicles/**")
-                                .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/vehicles/**")
-                                .hasAnyRole("OPERATOR", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/vehicles/**")
-                                .hasAnyRole("OPERATOR", "ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/vehicles/**")
-                                .hasAnyRole("OPERATOR", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/vehicles/**")
-                                .hasAnyRole("OPERATOR", "ADMIN")
-
-                        // --- Anything else requires at least authentication ---
-                        .anyRequest().authenticated()
+                        // --- All other endpoints require ADMIN role ---
+                        .anyRequest().hasRole("ADMIN")
                 )
 
                 // Insert JWT filter before the standard username/password filter

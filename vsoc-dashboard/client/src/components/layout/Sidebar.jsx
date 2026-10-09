@@ -1,8 +1,17 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Car, Wifi, WifiOff } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Car, Wifi, WifiOff, LogOut } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = ({ connected }) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -27,6 +36,21 @@ const Sidebar = ({ connected }) => {
           <Car />
           <span>Fleet</span>
         </NavLink>
+
+        <button 
+          onClick={handleLogout}
+          className="sidebar-link"
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            cursor: 'pointer',
+            marginTop: 'auto',
+            color: '#ef4444'
+          }}
+        >
+          <LogOut size={20} />
+          <span>Sign Out</span>
+        </button>
       </nav>
 
       <div className="sidebar-footer">

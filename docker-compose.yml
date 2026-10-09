@@ -12,6 +12,11 @@ services:
       - DEFAULT_ADMIN_USERNAME=${DEFAULT_ADMIN_USERNAME:-admin}
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:?DEFAULT_ADMIN_PASSWORD env var must be set.}
       - DEFAULT_ADMIN_ROLE=${DEFAULT_ADMIN_ROLE:-ADMIN}
+      # Docker image name for edge-vehicle containers.
+      # Must match the image tag produced by the edge-vehicle-base build below.
+      - ORCHESTRATOR_IMAGE_NAME=capstone-2027-edge-vehicle-base
+      # Docker Compose creates a network named <project>_default; default project name = folder name.
+      - ORCHESTRATOR_NETWORK_NAME=capstone-2027_default
     volumes:
       # Mount Docker socket so Spring Boot can spin up containers dynamically
       - /var/run/docker.sock:/var/run/docker.sock

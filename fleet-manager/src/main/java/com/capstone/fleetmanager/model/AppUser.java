@@ -7,13 +7,11 @@ import java.time.LocalDateTime;
  * Persistent user account stored in the 'users' table.
  * <p>
  * Passwords are stored as a BCrypt hash (60-char string) — never in plain text.
- * Roles drive endpoint-level access control via Spring Security.
+ * All users have the ADMIN role, which grants full access to all endpoints.
  * </p>
  *
  * Supported roles:
- *   ADMIN    – full read/write access, can manage users
- *   OPERATOR – can manage vehicles (create/update/delete)
- *   VIEWER   – read-only access
+ *   ADMIN – full read/write access to all vehicle and system endpoints
  */
 @Entity
 @Table(name = "users", uniqueConstraints = {

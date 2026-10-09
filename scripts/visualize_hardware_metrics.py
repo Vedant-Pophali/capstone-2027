@@ -46,7 +46,8 @@ def hamming_distance_fraction(a: np.ndarray, b: np.ndarray) -> float:
 
 def get_puf_class():
     """Dynamically import VehiclePUF from the edge-vehicles module."""
-    base = os.path.dirname(os.path.abspath(__file__))
+    # When running from scripts/, go up one level to the project root
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.insert(0, base)
     # Also add edge_vehicles directory if running from repo root
     ev_path = os.path.join(base, "edge-vehicles")
