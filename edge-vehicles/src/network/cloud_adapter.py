@@ -37,6 +37,16 @@ class CloudAdapter(ABC):
         """Sends a signed proof of the challenge to the cloud. Returns True if verified."""
         pass
 
+    @abstractmethod
+    def request_ota_challenge_seeds(self, vehicle_id: str) -> list:
+        """Requests a batch of fresh integer challenge seeds from the cloud for OTA renewal."""
+        pass
+
+    @abstractmethod
+    def send_ota_batch(self, vehicle_id: str, encrypted_payload: str) -> bool:
+        """Sends the AES-GCM encrypted CRP batch to the cloud. Returns True on success."""
+        pass
+
 class MockCloudAdapter(CloudAdapter):
     """
     Mock Adapter for local testing and offline simulation.
@@ -78,6 +88,16 @@ class MockCloudAdapter(CloudAdapter):
             self.connect()
         logger.info(f"[MockCloudAdapter] Proof sent: Submitting signed challenge for Verification")
         return self.verifier.verify_proof(vehicle_id, challenge, signature)
+
+    def request_ota_challenge_seeds(self, vehicle_id: str) -> list:
+        import random
+        seeds = [random.randint(10000, 9999999) for _ in range(5000)]
+        logger.info(f"[MockCloudAdapter] Generated {len(seeds)} fresh OTA challenge seeds for vehicle {vehicle_id}")
+        return seeds
+
+    def send_ota_batch(self, vehicle_id: str, encrypted_payload: str) -> bool:
+        logger.info(f"[MockCloudAdapter] OTA batch received for vehicle {vehicle_id} (encrypted, {len(encrypted_payload)} chars). Storing in mock DB.")
+        return True
 
 class HTTPRestAdapter(CloudAdapter):
     """
@@ -128,8 +148,42 @@ class HTTPRestAdapter(CloudAdapter):
         return {"status": "authorized", "challenge": random.randint(10000, 99999)}
 
     def send_proof(self, vehicle_id: str, challenge: int, signature: str) -> bool:
-        logger.info(f"[HTTPRestAdapter] Mocking proof verification for {vehicle_id}")
-        return True
+        data_bytes = json.dumps({"vehicleId": vehicle_id, "challenge": challenge, "signature": signature}).encode('utf-8')
+        req = urllib.request.Request(
+            self.endpoint_url.replace("/ingest", "/puf/verify").replace("8080", "8081"),
+            data=data_bytes,
+            headers={'Content-Type': 'application/json'}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                result = json.loads(resp.read())
+                return result.get("verified", False)
+        except Exception as e:
+            logger.error(f"[HTTPRestAdapter] verify_proof error: {e}")
+            return False
+
+    def request_ota_challenge_seeds(self, vehicle_id: str) -> list:
+        import random
+        # In real deployment: GET /api/puf/ota-seeds?vehicleId=... returns a JSON list
+        # Simulated here for the hardware-simulation-trials branch:
+        seeds = [random.randint(10000, 9999999) for _ in range(5000)]
+        logger.info(f"[HTTPRestAdapter] Fetched {len(seeds)} OTA challenge seeds for vehicle {vehicle_id}")
+        return seeds
+
+    def send_ota_batch(self, vehicle_id: str, encrypted_payload: str) -> bool:
+        ota_url = self.endpoint_url.replace("/ingest", "/puf/ota-renew").replace("8080", "8081")
+        # We send the encrypted payload wrapped in a JSON envelope
+        # The cloud-side decrypts it before inserting into SQLite
+        data_bytes = json.dumps({"vehicleId": vehicle_id, "encryptedBatch": encrypted_payload}).encode('utf-8')
+        req = urllib.request.Request(ota_url, data=data_bytes, headers={'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                result = json.loads(resp.read())
+                logger.info(f"[HTTPRestAdapter] OTA batch accepted. Cloud stored {result.get('stored', 0)} CRPs.")
+                return True
+        except Exception as e:
+            logger.error(f"[HTTPRestAdapter] OTA batch send error: {e}")
+            return False
 
 class WebSocketAdapter(CloudAdapter):
     """
@@ -158,6 +212,14 @@ class WebSocketAdapter(CloudAdapter):
         return {"status": "authorized", "challenge": random.randint(10000, 99999)}
 
     def send_proof(self, vehicle_id: str, challenge: int, signature: str) -> bool:
+        return True
+
+    def request_ota_challenge_seeds(self, vehicle_id: str) -> list:
+        import random
+        return [random.randint(10000, 9999999) for _ in range(5000)]
+
+    def send_ota_batch(self, vehicle_id: str, encrypted_payload: str) -> bool:
+        logger.info(f"[WebSocketAdapter] OTA batch streamed for vehicle {vehicle_id}.")
         return True
 
 class AdapterFactory:

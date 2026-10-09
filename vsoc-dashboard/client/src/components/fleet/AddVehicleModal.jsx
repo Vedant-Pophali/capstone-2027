@@ -6,10 +6,12 @@ import { apiService } from '../../services/api';
 const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [form, setForm] = useState({ id: '', owner: '', model: '' });
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (submitError) setSubmitError('');
   };
 
   const handleSubmit = async (e) => {
@@ -17,18 +19,19 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
     if (!form.id.trim()) return;
 
     setLoading(true);
+    setSubmitError('');
     try {
       await apiService.createVehicle({
         id: form.id.trim(),
         owner: form.owner.trim(),
         model: form.model.trim(),
       });
-      addToast(`Vehicle #${form.id} created and container started`, 'success');
+      addToast(`Vehicle #${form.id} registered — container started`, 'success');
       setForm({ id: '', owner: '', model: '' });
       onSuccess?.();
       onClose();
     } catch (err) {
-      addToast(err.message, 'error');
+      setSubmitError(err.message || 'Failed to create vehicle. Is the edge-vehicle image built?');
     } finally {
       setLoading(false);
     }
@@ -46,8 +49,14 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add New Vehicle" footer={footer}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Deploy Edge Vehicle" footer={footer}>
       <form onSubmit={handleSubmit}>
+        {submitError && (
+          <div className="form-error-banner" role="alert">
+            <strong>Container error:</strong> {submitError}
+          </div>
+        )}
+
         <div className="form-group">
           <label className="form-label" htmlFor="vehicle-id">Vehicle ID *</label>
           <input
@@ -60,8 +69,9 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
             pattern="^[a-zA-Z0-9_\-]+$"
             required
             autoFocus
+            disabled={loading}
           />
-          <div className="form-hint">Alphanumeric characters, hyphens, and underscores only.</div>
+          <div className="form-hint">Alphanumeric, hyphens, and underscores only. Becomes the container name.</div>
         </div>
 
         <div className="form-group">
@@ -73,6 +83,7 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
             value={form.owner}
             onChange={handleChange}
             placeholder="e.g. Vedant"
+            disabled={loading}
           />
         </div>
 
@@ -85,6 +96,7 @@ const AddVehicleModal = ({ isOpen, onClose, onSuccess }) => {
             value={form.model}
             onChange={handleChange}
             placeholder="e.g. Tesla Model 3"
+            disabled={loading}
           />
         </div>
       </form>

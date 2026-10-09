@@ -158,12 +158,35 @@ function Start-DockerMode {
     Write-Host "[1/4] Pre-flight checks..." -ForegroundColor Yellow
     Test-Prerequisites -NeedDocker $true
 
+    # Load .env so JWT_SECRET / DEFAULT_ADMIN_PASSWORD are available to docker compose
+    $envFile = "$ProjectRoot\.env"
+    if (-not (Test-Path $envFile)) {
+        Write-Host "[ERROR] .env file not found. Copy .env.example to .env and fill in secret values." -ForegroundColor Red
+        Write-Host "        cp .env.example .env  # then edit with real credentials" -ForegroundColor DarkGray
+        exit 1
+    }
+    Get-Content $envFile | Where-Object { $_ -notmatch '^\s*#' -and $_ -match '=' } | ForEach-Object {
+        $parts = $_ -split '=', 2
+        [System.Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim(), 'Process')
+    }
+    Write-Host "  [OK] .env loaded" -ForegroundColor Green
+
+    $oldEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+
     Write-Host "`n[2/4] Tearing down previous containers..." -ForegroundColor Yellow
-    docker-compose -f "$ProjectRoot\docker-compose.yml" down 2>$null
+    docker compose -f "$ProjectRoot\docker-compose.yml" down 2>&1 | Out-Null
 
     Write-Host "`n[3/4] Building and launching all services..." -ForegroundColor Yellow
     Write-Host "  This builds: fleet-manager (Spring Boot), dashboard-client (Vite/React), edge-vehicle-base" -ForegroundColor DarkGray
-    docker-compose -f "$ProjectRoot\docker-compose.yml" up -d --build
+
+    # Pre-build the edge-vehicle-base image so the orchestrator can spin up containers immediately
+    Write-Host "  Pre-building edge-vehicle-base image..." -ForegroundColor DarkGray
+    docker compose -f "$ProjectRoot\docker-compose.yml" build --no-deps edge-vehicle-base 2>&1 | Out-Null
+
+    docker compose -f "$ProjectRoot\docker-compose.yml" up -d --build
+
+    $ErrorActionPreference = $oldEap
 
     Write-Host "`n[4/4] Waiting for services to initialize (15 seconds)..." -ForegroundColor Yellow
     Start-Sleep -Seconds 15
@@ -180,7 +203,7 @@ function Start-DockerMode {
         while ($true) { Start-Sleep -Seconds 1 }
     } finally {
         Write-Host "`n  Shutting down..." -ForegroundColor Yellow
-        docker-compose -f "$ProjectRoot\docker-compose.yml" down
+        docker compose -f "$ProjectRoot\docker-compose.yml" down
         Write-Host "  Done!" -ForegroundColor Green
     }
 }
@@ -201,6 +224,9 @@ function Start-DevMode {
         param($root)
         Set-Location "$root\fleet-manager"
         $env:SPRING_DATASOURCE_URL = "jdbc:sqlite:$root/data/fleet-manager/fleet.db"
+        # In dev mode: use the image built directly (not via compose), and no compose network
+        $env:ORCHESTRATOR_IMAGE_NAME = "capstone-2027-edge-vehicle-base"
+        $env:ORCHESTRATOR_NETWORK_NAME = ""
         mvn spring-boot:run -q
     } -ArgumentList $ProjectRoot
 

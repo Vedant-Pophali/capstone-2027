@@ -67,4 +67,22 @@ To verify the REST API is working correctly without using the UI, open a **new**
 ## Shutting Down
 
 - **If using `-Dev`**: Press `Ctrl+C` in your terminal to stop the local servers.
-- **If using Docker**: Press `Ctrl+C` in your terminal, and the script will automatically run `docker-compose down` to clean up your environment.
+- **If using Docker**: Press `Ctrl+C` in your terminal, and the script will automatically run `docker-compose down` to clean up your environment.
+
+---
+
+## Utility Scripts
+
+Standalone Python scripts live in the `scripts/` folder at the project root:
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/factory_enrollment.py` | Offline PUF CRP provisioning — seeds the SQLite DB with challenge-response pairs |
+| `scripts/visualize_hardware_metrics.py` | Generates ArbiterPUF uniqueness/reliability graphs |
+
+Run from the project root, e.g.:
+```powershell
+python scripts/factory_enrollment.py --vehicle-ids 1,2,3 --count 10000
+python scripts/visualize_hardware_metrics.py
+```
+
