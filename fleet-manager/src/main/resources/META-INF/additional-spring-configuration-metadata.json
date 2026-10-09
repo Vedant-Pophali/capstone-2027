@@ -1,0 +1,29 @@
+{
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret key for HS256 JWT signing. Must be at least 32 characters (256 bits)."
+    },
+    {
+      "name": "jwt.expiration-seconds",
+      "type": "java.lang.Long",
+      "description": "Expiration duration in seconds for issued JWT tokens (default: 86400)."
+    },
+    {
+      "name": "app.default-user.username",
+      "type": "java.lang.String",
+      "description": "Default administrator username seeded on startup."
+    },
+    {
+      "name": "app.default-user.password",
+      "type": "java.lang.String",
+      "description": "Default administrator password seeded on startup."
+    },
+    {
+      "name": "app.default-user.role",
+      "type": "java.lang.String",
+      "description": "Default administrator role seeded on startup."
+    }
+  ]
+}

@@ -41,8 +41,11 @@ export function useFleet() {
 
   // --- WebSocket connection ---
   useEffect(() => {
+    const token = localStorage.getItem('fleet_token');
+    const wsUrlWithAuth = token ? `${WS_URL}?token=${token}` : WS_URL;
+    
     const client = new Client({
-      webSocketFactory: () => new SockJS(WS_URL),
+      webSocketFactory: () => new SockJS(wsUrlWithAuth),
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,

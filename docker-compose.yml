@@ -4,6 +4,19 @@ services:
       context: ./fleet-manager
     ports:
       - "8081:8081"
+    environment:
+      # Override these in production with strong, randomly generated values.
+      # The secret must be at least 32 characters for HS256.
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET env var must be set. Copy .env.example to .env and fill in values.}
+      - JWT_EXPIRATION_SECONDS=${JWT_EXPIRATION_SECONDS:-86400}
+      - DEFAULT_ADMIN_USERNAME=${DEFAULT_ADMIN_USERNAME:-admin}
+      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:?DEFAULT_ADMIN_PASSWORD env var must be set.}
+      - DEFAULT_ADMIN_ROLE=${DEFAULT_ADMIN_ROLE:-ADMIN}
+      # Docker image name for edge-vehicle containers.
+      # Must match the image tag produced by the edge-vehicle-base build below.
+      - ORCHESTRATOR_IMAGE_NAME=capstone-2027-edge-vehicle-base
+      # Docker Compose creates a network named <project>_default; default project name = folder name.
+      - ORCHESTRATOR_NETWORK_NAME=capstone-2027_default
     volumes:
       # Mount Docker socket so Spring Boot can spin up containers dynamically
       - /var/run/docker.sock:/var/run/docker.sock
