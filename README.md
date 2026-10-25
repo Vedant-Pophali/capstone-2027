@@ -384,7 +384,7 @@ sequenceDiagram
     
     Note over EDGE,CAN: Monitoring & Anomaly Detection
     CAN->>ML: Streaming CAN frames
-    ML->>ML: SNN detects timing anomaly; CNN detects zero-day
+    ML->>ML: SNN detects timing anomaly, CNN detects zero-day
     ML->>ML: Expand classification head (Class 10) & local retrain
     
     Note over ML,SEC: Secure Export
@@ -399,5 +399,4 @@ sequenceDiagram
     STORE->>STORE: Anti-replay verify, HMAC verify, AES-GCM decrypt
     STORE->>FM: Alert: Anomaly adapted on Vehicle 42
     FM-)UI: WebSocket /topic/fleet: VehicleStatusChanged (Healthy -> Threat Alerted)
-
 ```
