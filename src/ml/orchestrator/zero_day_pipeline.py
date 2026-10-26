@@ -132,6 +132,13 @@ with torch.no_grad():
     new_pred = torch.argmax(model(sample_test), dim=1).item()
     print(f"\n[Verification] Re-evaluating Zero-Day payload: Prediction is now Class {new_pred} (Class 10 = Zero-Day)")
 
+# Save the newly adapted weights to local_update.pth for Federated Learning transmission
+models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'models')
+os.makedirs(models_dir, exist_ok=True)
+save_update_path = os.path.join(models_dir, 'local_update.pth')
+torch.save(model.state_dict(), save_update_path)
+print(f"\n[Export] Local adapted weights saved to: {save_update_path}")
+
 print("\n[6] SUCCESS: Stage 1 CNN adapted to newly discovered Zero-Day attack!")
 print("The edge device is now immunized and ready to transmit updated weights in the next FL round.")
 print("===================================================================================\n")
