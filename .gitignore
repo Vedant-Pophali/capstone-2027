@@ -45,3 +45,10 @@ info/
 can_noniid_data
 PUF_CP_IDS_Dataset_Documentation.docx
 implementation_summary.md
+# ML Ephemeral Weights & Local Updates
+src/ml/models/local_update.pth
+local_update.pth
+*.pth.tar
+*.ckpt
+*.log
+scratch/
