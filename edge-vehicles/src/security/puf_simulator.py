@@ -1,44 +1,50 @@
 import os
-import hashlib
+import csv
 import numpy as np
 
-try:
-    from pypuf.simulation import ArbiterPUF
-    from pypuf.io import random_inputs
-    HAS_PYPUF = True
-except ImportError:
-    HAS_PYPUF = False
-
-class FallbackSimulatedPUF:
-    """Deterministic fallback ArbiterPUF simulation if pypuf library is not installed."""
-    def __init__(self, n=64, seed=42):
-        self.n = n
-        self.seed = seed
-
-    def eval(self, challenge):
-        # Challenge is a 2D numpy array (1, n) with elements in {-1, 1}
-        # Compute deterministic challenge-response using seed and challenge bits
-        ch_bytes = challenge.tobytes()
-        h = hashlib.sha256(f"{self.seed}".encode() + ch_bytes).digest()
-        # Convert first byte to response array in {-1, 1}
-        bit = 1 if h[0] % 2 == 1 else -1
-        return np.array([bit])
-
 class VehiclePUF:
-    def __init__(self, challenge_length=64):
-        self.challenge_length = challenge_length
-        self.vehicle_id = int(os.getenv("VEHICLE_ID", "42"))
-        if HAS_PYPUF:
-            self.puf = ArbiterPUF(n=self.challenge_length, seed=self.vehicle_id)
-        else:
-            self.puf = FallbackSimulatedPUF(n=self.challenge_length, seed=self.vehicle_id)
+    def __init__(self, csv_filepath=None):
+        # Read the Vehicle ID from the environment (e.g., "101", "102")
+        self.vehicle_id = os.getenv("VEHICLE_ID", "101")
+        self.crp_database = {}
+        
+        # Resolve path to the Verilog-generated CSV
+        if csv_filepath is None:
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            csv_filepath = os.path.join(base_dir, 'data', 'puf_crp_export.csv')
 
-    def get_response(self, challenge_seed):
-        if HAS_PYPUF:
-            challenge = random_inputs(n=self.challenge_length, N=1, seed=challenge_seed)
-            response = self.puf.eval(challenge)
-        else:
-            np.random.seed(challenge_seed)
-            challenge = np.random.choice([-1, 1], size=(1, self.challenge_length))
-            response = self.puf.eval(challenge)
-        return challenge, response
+        self._load_hardware_data(csv_filepath)
+
+    def _load_hardware_data(self, csv_filepath):
+        try:
+            with open(csv_filepath, 'r') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    challenge_hex = row['challenge_hex']
+                    
+                    for column_name, hex_response in row.items():
+                        if 'vid' in column_name:
+                            vid = column_name.split('vid')[-1]
+                            if vid not in self.crp_database:
+                                self.crp_database[vid] = {}
+                                
+                            # Convert 8-character hex to a 32-bit numpy array for the SNN
+                            bin_string = bin(int(hex_response, 16))[2:].zfill(32)
+                            # SNNs typically expect bipolar (-1, 1) or binary (0, 1) inputs
+                            bin_array = np.array([1 if bit == '1' else 0 for bit in bin_string], dtype=np.float32)
+                            self.crp_database[vid][challenge_hex] = bin_array
+        except FileNotFoundError:
+            raise RuntimeError(f"Hardware PUF data missing at {csv_filepath}. Run Verilog simulation first.")
+
+    def get_response(self, challenge_hex):
+        """Returns the hardware-accurate 32-bit response for the VSOC challenge."""
+        vehicle_data = self.crp_database.get(str(self.vehicle_id))
+        if not vehicle_data:
+            raise ValueError(f"Vehicle ID {self.vehicle_id} not found in hardware dataset.")
+            
+        response = vehicle_data.get(challenge_hex)
+        if response is None:
+            raise ValueError(f"Challenge {challenge_hex} not computed for VID {self.vehicle_id}.")
+            
+        # Return tuple to match the legacy signature expectations in main.py
+        return challenge_hex, response
