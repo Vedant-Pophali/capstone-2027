@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-Compiles and runs the Arbiter PUF fleet simulation using Icarus Verilog.
+Compiles and runs the 32-bit Parallel Arbiter PUF fleet simulation using Icarus Verilog.
 
 .DESCRIPTION
 Automates the full simulation workflow:
   1. Checks for Icarus Verilog (iverilog + vvp) in PATH.
-  2. Compiles all design sources and testbench into a single executable.
+  2. Compiles all design sources (including parallel_puf.v) and testbench.
   3. Runs the simulation, producing VCD waveform and CSV CRP data.
   4. Provides guidance for GTKWave / EPWave viewing.
 
@@ -20,10 +20,10 @@ $SimRoot = (Resolve-Path "$ScriptDir\..").Path
 $ProjectRoot = (Resolve-Path "$ScriptDir\..\..").Path
 
 Write-Host ""
-Write-Host "  ==============================================" -ForegroundColor Cyan
-Write-Host "  |  Arbiter PUF Fleet Simulation Runner      |" -ForegroundColor Cyan
-Write-Host "  |  5 Cars - Same Logic - Different CRPs     |" -ForegroundColor Cyan
-Write-Host "  ==============================================" -ForegroundColor Cyan
+Write-Host "  ===============================================" -ForegroundColor Cyan
+Write-Host "  |  32-bit Parallel Arbiter PUF Fleet Sim     |" -ForegroundColor Cyan
+Write-Host "  |  5 Cars x 32 Lanes x 128 Stages           |" -ForegroundColor Cyan
+Write-Host "  ===============================================" -ForegroundColor Cyan
 Write-Host ""
 
 # ── Step 0: Prerequisite Check ─────────────────────────────────────────
@@ -64,12 +64,14 @@ if (-not (Test-Path $dataDir)) {
 
 # ── Step 2: Compile Verilog Sources ────────────────────────────────────
 Write-Host "[1/3] Compiling Verilog design + testbench..." -ForegroundColor Yellow
+Write-Host "       Architecture: 128-bit challenge, 32-bit parallel response" -ForegroundColor DarkGray
 
 $srcFiles = @(
     "$SimRoot\src\mux2to1_gate.v",
     "$SimRoot\src\d_flip_flop_arbiter.v",
     "$SimRoot\src\puf_switch_stage.v",
     "$SimRoot\src\arbiter_puf.v",
+    "$SimRoot\src\parallel_puf.v",
     "$SimRoot\src\vehicle_fleet_puf.v"
 )
 $tbFile = "$SimRoot\tb\puf_fleet_tb.v"
@@ -87,7 +89,7 @@ Write-Host "  [OK] Compiled to $outFile" -ForegroundColor Green
 # ── Step 3: Run Simulation ─────────────────────────────────────────────
 Write-Host ""
 Write-Host "[2/3] Running PUF fleet simulation..." -ForegroundColor Yellow
-Write-Host "  (This generates VCD waveform + CSV CRP data)" -ForegroundColor DarkGray
+Write-Host "  (5 cars x 32 lanes x 128 stages — this may take a moment)" -ForegroundColor DarkGray
 Write-Host ""
 
 # Must run vvp from hardware-simulation/ so relative paths in testbench resolve correctly
@@ -132,14 +134,15 @@ else {
 Write-Host ""
 Write-Host "  ── How to View Waveforms ──" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  EPWave (online - no install):" -ForegroundColor Cyan
+Write-Host "  GTKWave (local):" -ForegroundColor Cyan
 Write-Host "    gtkwave `"$vcdPath`"" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  EPWave (online - no install):" -ForegroundColor Cyan
 Write-Host "    Upload the VCD file to https://www.edaplayground.com" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "  Zoom into rising edges to see ps-level gaps" -ForegroundColor DarkGray
-Write-Host "    - car*_upper_arrival vs car*_lower_arrival  (the race!)" -ForegroundColor DarkGray
-Write-Host "    - car*_response                              (the CRP bit)" -ForegroundColor DarkGray
-Write-Host "    - Zoom into rising edges to see ps-level gaps" -ForegroundColor DarkGray
+Write-Host "  Key signals to inspect:" -ForegroundColor DarkGray
+Write-Host "    - car1_lane0_upper vs car1_lane0_lower  (Car 1 lane 0 race)" -ForegroundColor DarkGray
+Write-Host "    - car2_lane0_upper vs car2_lane0_lower  (Car 2 lane 0 race)" -ForegroundColor DarkGray
+Write-Host "    - car*_response[31:0]                    (32-bit CRP vectors)" -ForegroundColor DarkGray
+Write-Host "    - Zoom into rising edges to see ps-level timing gaps" -ForegroundColor DarkGray
 Write-Host ""
