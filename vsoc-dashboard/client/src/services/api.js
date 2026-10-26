@@ -8,12 +8,26 @@ class ApiService {
 
   async request(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`;
+    const token = localStorage.getItem('fleet_token');
+    
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const config = {
-      headers: { 'Content-Type': 'application/json', ...options.headers },
+      headers,
       ...options,
     };
 
     const response = await fetch(url, config);
+
+    // 401 Unauthorized — token expired or revoked; force re-login
+    if (response.status === 401) {
+      localStorage.removeItem('fleet_token');
+      window.location.href = '/login';
+      throw new Error('Session expired. Please log in again.');
+    }
 
     if (!response.ok) {
       let errorMessage = `Request failed: ${response.status}`;
