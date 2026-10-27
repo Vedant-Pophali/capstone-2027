@@ -89,7 +89,7 @@ Write-Host "  [OK] Compiled to $outFile" -ForegroundColor Green
 # ── Step 3: Run Simulation ─────────────────────────────────────────────
 Write-Host ""
 Write-Host "[2/3] Running PUF fleet simulation..." -ForegroundColor Yellow
-Write-Host "  (5 cars x 32 lanes x 128 stages — this may take a moment)" -ForegroundColor DarkGray
+Write-Host "   (5 cars x 32 lanes x 128 stages - this may take a moment)" -ForegroundColor DarkGray
 Write-Host ""
 
 # Must run vvp from hardware-simulation/ so relative paths in testbench resolve correctly
