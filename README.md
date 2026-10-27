@@ -10,6 +10,7 @@ This project consists of:
 - **VSOC Dashboard (Frontend)**: A modern React/Vite web application providing an administrative interface.
 - **Edge Vehicles**: Simulated vehicle environments deployed dynamically as Docker containers.
 - **ML / PUF Simulations**: Python-based pipeline simulations for zero-day attacks and secure edge node handshakes.
+- **Hardware PUF Simulation**: 32-bit Parallel Arbiter PUF gate-level simulation in Verilog with picosecond race resolution for fleet authentication.
 
 ---
 
@@ -76,17 +77,17 @@ To verify the REST API is working correctly without using the UI, open a **new**
 Standalone Python scripts live in the `scripts/` folder at the project root:
 
 | Script | Purpose |
-|--------|---------|
+| -------- | --------- |
 | `scripts/factory_enrollment.py` | Offline PUF CRP provisioning — seeds the SQLite DB with challenge-response pairs |
 | `scripts/visualize_hardware_metrics.py` | Generates ArbiterPUF uniqueness/reliability graphs |
+| `hardware-simulation/scripts/run_simulation.ps1` | Compiles & runs the 32-bit Parallel Arbiter PUF Verilog fleet simulation |
 
 Run from the project root, e.g.:
+
 ```powershell
 python scripts/factory_enrollment.py --vehicle-ids 1,2,3 --count 10000
 python scripts/visualize_hardware_metrics.py
 ```
-
-
 
 ## Architecture Diagrams
 
